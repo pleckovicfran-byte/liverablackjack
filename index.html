@@ -1,0 +1,831 @@
+
+
+<!DOCTYPE html>
+
+<html lang="hr">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<title>STUDIO LIVE BLACKJACK</title>
+
+<style>
+
+*{box-sizing:border-box}
+
+body{margin:0;background:#07110c;color:#fff;font-family:Arial,sans-serif}
+
+header{padding:20px;text-align:center;background:#0b1911;border-bottom:1px solid #c8a653}
+
+h1{font-size:24px;letter-spacing:2px;margin:0}
+
+h1 span{color:#e5bd61}
+
+nav{display:flex;justify-content:center;gap:8px;flex-wrap:wrap;padding:14px}
+
+button{padding:11px 13px;border:1px solid #426047;border-radius:7px;background:#18291d;color:white;font-weight:bold;cursor:pointer}
+
+button:hover{filter:brightness(1.2)}
+
+button:disabled{opacity:.4;cursor:not-allowed}
+
+.gold{background:#d7ad4d;color:#17130a;border:0}
+
+.green{background:#087449}
+
+input,select{width:100%;padding:11px;background:#0a170f;border:1px solid #35543c;border-radius:7px;color:white;margin:5px 0 12px}
+
+label{font-size:13px;color:#d4e0d6}
+
+.container{max-width:1050px;margin:auto;padding:12px}
+
+.panel{background:#101d15;border:1px solid #2d4935;border-radius:13px;padding:15px;margin-bottom:14px}
+
+h2{font-size:14px;color:#e5bd61;letter-spacing:1px}
+
+.table{background:radial-gradient(ellipse,#08734c,#06452f);border:7px solid #49301d;border-radius:30px;padding:20px 8px;min-height:340px;display:flex;flex-direction:column;justify-content:space-around;text-align:center}
+
+.cards{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;min-height:85px}
+
+.card{width:55px;height:80px;background:#fff;color:#111;border-radius:7px;padding:6px;display:flex;flex-direction:column;justify-content:space-between;font-size:20px;font-weight:bold;text-align:left}
+
+.card .suit{align-self:flex-end}
+
+.red{color:#d52235}
+
+.total{margin:7px;color:#f7e5a8}
+
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+
+.actions{display:grid;grid-template-columns:repeat(4,1fr);gap:7px;margin-top:12px}
+
+.smallgrid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+
+.smallgrid button{padding:10px 2px}
+
+.suits{display:grid;grid-template-columns:repeat(4,1fr);gap:6px}
+
+.status{padding:9px;color:#e5bd61;font-size:13px;line-height:1.5}
+
+.muted{font-size:12px;color:#a8bcad;line-height:1.5}
+
+.hidden{display:none!important}
+
+.history{font-size:12px;color:#bbccbf;line-height:1.8;overflow-wrap:anywhere}
+
+.pricebox{display:grid;grid-template-columns:repeat(2,1fr);gap:8px}
+
+.price{background:#0a170f;border:1px solid #35543c;padding:10px;border-radius:8px}
+
+.price strong{color:#e5bd61}
+
+.recipient{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 15px}
+
+.recipient button{padding:14px 6px}
+
+.recipient button.selected,.smallgrid button.selected,.suits button.selected{background:#d7ad4d;color:#17130a;border-color:#d7ad4d}
+
+@media(max-width:600px){.grid{grid-template-columns:1fr}.actions{grid-template-columns:repeat(2,1fr)}.table{min-height:310px}.smallgrid button{padding:10px 1px}.pricebox{grid-template-columns:1fr 1fr}}
+
+</style>
+
+</head>
+
+<body>
+
+<header><h1>STUDIO <span>LIVE</span> BLACKJACK</h1></header>
+
+<nav>
+
+<button onclick="page('game')">BLACKJACK</button>
+
+<button onclick="page('wallet')">CRYPTO WALLET</button>
+
+</nav>
+
+<div class="container">
+
+<section id="game">
+
+<div class="panel">
+
+<h2>RUČNI UNOS KARATA</h2>
+
+<p class="muted">Odaberi primatelja i vrijednost karte. Simbol se automatski mijenja na svakom kliku. Zatim pritisni UNESI KARTU.</p>
+
+<label>Kome dijeliš kartu?</label>
+
+<div class="recipient">
+
+<button id="playerTarget" class="selected" onclick="chooseTarget('player')">IGRAČ</button>
+
+<button id="dealerTarget" onclick="chooseTarget('dealer')">DJELITELJ</button>
+
+</div>
+
+<label>Vrijednost karte</label>
+
+<div id="ranks" class="smallgrid"></div>
+
+<div id="selected" class="status">Primatelj: IGRAČ · Odaberi vrijednost karte.</div>
+
+<button class="gold" onclick="addCard()">UNESI KARTU</button>
+
+<button onclick="undoCard()">PONIŠTI ZADNJU KARTU</button>
+
+<button onclick="clearTable()">OČISTI STOL</button>
+
+</div>
+
+<div class="panel">
+
+<div class="table">
+
+<div>
+
+<h2>DEALER</h2>
+
+<div id="dealerCards" class="cards"></div>
+
+<div id="dealerTotal" class="total">Čeka se karta</div>
+
+</div>
+
+<div style="font-size:25px;font-weight:bold;letter-spacing:4px;color:#ffffff30">BLACKJACK</div>
+
+<div>
+
+<h2>PLAYER</h2>
+
+<div id="playerCards" class="cards"></div>
+
+<div id="playerTotal" class="total">Čeka se karta</div>
+
+</div>
+
+</div>
+
+<div class="grid">
+
+<div class="panel">
+
+<div class="muted">VIRTUALNI SALDO</div>
+
+<h2 id="balance">€0.00</h2>
+
+</div>
+
+<div class="panel">
+
+<div class="muted">TRENUTNI ULOG</div>
+
+<h2 id="currentBet">€0.00</h2>
+
+</div>
+
+</div>
+
+<label>Ulog (€), minimum €1</label>
+
+<input id="bet" type="number" min="1" step="0.01" value="1">
+
+<button class="gold" onclick="startGame()">NOVA RUNDA</button>
+
+<div class="actions">
+
+<button class="green" onclick="hit()">HIT</button>
+
+<button onclick="stand()">STAND</button>
+
+<button onclick="doubleBet()">DOUBLE</button>
+
+<button onclick="splitHand()">SPLIT</button>
+
+</div>
+
+<div id="status" class="status">Demo način. Početni saldo: €0.00.</div>
+
+</div>
+
+<div class="panel">
+
+<h2>POVIJEST RUNDI</h2>
+
+<div id="history" class="history"></div>
+
+</div>
+
+</section>
+
+<section id="wallet" class="hidden">
+
+<div class="panel">
+
+<h2>DEMO CRYPTO WALLET</h2>
+
+<p class="muted">Simulacija. Ne šalje niti prima stvarne kriptovalute.</p>
+
+<h2>STVARNE TRŽIŠNE CIJENE</h2>
+
+<div id="priceStatus" class="status">Učitavanje cijena...</div>
+
+<div id="prices" class="pricebox"></div>
+
+<p class="muted">Izvor: CoinGecko. Cijene su indikativne.</p>
+
+<div class="grid">
+
+<div class="panel">
+
+<h2>DEMO DEPOSIT</h2>
+
+<label>Kriptovaluta</label>
+
+<select id="depCoin" onchange="convert('dep')"></select>
+
+<label>Iznos u EUR (min. €10)</label>
+
+<input id="depEUR" type="number" min="10" step="0.01" value="10" oninput="convert('dep')">
+
+<div id="depResult" class="status"></div>
+
+<button class="gold" onclick="deposit()">SIMULIRAJ DEPOSIT</button>
+
+</div>
+
+<div class="panel">
+
+<h2>DEMO WITHDRAW</h2>
+
+<label>Kriptovaluta</label>
+
+<select id="withCoin" onchange="convert('with')"></select>
+
+<label>Iznos u EUR (min. €10)</label>
+
+<input id="withEUR" type="number" min="10" step="0.01" value="10" oninput="convert('with')">
+
+<label>Adresa primatelja</label>
+
+<input id="address" placeholder="Demo adresa">
+
+<div id="withResult" class="status"></div>
+
+<button class="gold" onclick="withdraw()">SIMULIRAJ ISPLATU</button>
+
+</div>
+
+</div>
+
+<h2>TRANSAKCIJE</h2>
+
+<div id="transactions" class="history"></div>
+
+</div>
+
+</section>
+
+</div>
+
+<script>
+
+let balance=0,bet=0,player=[],dealer=[],active=false;
+
+let chosenRank=null,chosenSuit='♥',target='player';
+
+let doubleMode=false,lastAction=null;
+
+let prices={},priceUpdated=null;
+
+const coins={
+
+ BTC:{id:'bitcoin',name:'Bitcoin'},
+
+ ETH:{id:'ethereum',name:'Ethereum'},
+
+ LTC:{id:'litecoin',name:'Litecoin'},
+
+ DOGE:{id:'dogecoin',name:'Dogecoin'},
+
+ USDT:{id:'tether',name:'Tether'},
+
+ TRX:{id:'tron',name:'TRON'},
+
+ SOL:{id:'solana',name:'Solana'}
+
+};
+
+const $=id=>document.getElementById(id);
+
+function page(id){
+
+ ['game','wallet'].forEach(p=>$(p).classList.toggle('hidden',p!==id));
+
+}
+
+function money(n){return '€'+Number(n).toFixed(2)}
+
+function value(c){
+
+ if(c.rank==='A')return 11;
+
+ if(['K','Q','J'].includes(c.rank))return 10;
+
+ return Number(c.rank);
+
+}
+
+function total(cards){
+
+ let n=cards.reduce((s,c)=>s+value(c),0);
+
+ let aces=cards.filter(c=>c.rank==='A').length;
+
+ while(n>21&&aces>0){n-=10;aces--;}
+
+ return n;
+
+}
+
+function isBlackjack(cards){
+
+ return cards.length===2&&total(cards)===21;
+
+}
+
+function drawCards(id,cards){
+
+ $(id).innerHTML='';
+
+ cards.forEach(c=>{
+
+  const d=document.createElement('div');
+
+  d.className='card'+(['♥','♦'].includes(c.suit)?' red':'');
+
+  const r=document.createElement('div');r.textContent=c.rank;
+
+  const s=document.createElement('div');s.className='suit';s.textContent=c.suit;
+
+  d.append(r,s);$(id).append(d);
+
+ });
+
+}
+
+function render(){
+
+ drawCards('playerCards',player);
+
+ drawCards('dealerCards',dealer);
+
+ $('playerTotal').textContent=player.length?'Ukupno: '+total(player):'Čeka se karta';
+
+ $('dealerTotal').textContent=dealer.length?'Ukupno: '+total(dealer):'Čeka se karta';
+
+ $('balance').textContent=money(balance);
+
+ $('currentBet').textContent=money(bet);
+
+}
+
+function say(s){$('status').textContent=s}
+
+function log(s,id='history'){
+
+ const d=document.createElement('div');
+
+ d.textContent=new Date().toLocaleTimeString()+' — '+s;
+
+ $(id).prepend(d);
+
+}
+
+function chooseTarget(who){
+
+ target=who;
+
+ $('playerTarget').classList.toggle('selected',who==='player');
+
+ $('dealerTarget').classList.toggle('selected',who==='dealer');
+
+ updateSelected();
+
+}
+
+function chooseRank(rank){
+
+ chosenRank=rank;
+
+ // Simbol se automatski mijenja pri svakom kliku na vrijednost.
+
+ const suits=['♥','♦','♠','♣'];
+
+ chosenSuit=suits[Math.floor(Math.random()*suits.length)];
+
+ document.querySelectorAll('#ranks button').forEach(b=>{
+
+  b.classList.toggle('selected',b.textContent===rank);
+
+ });
+
+ updateSelected();
+
+}
+
+function updateSelected(){
+
+ $('selected').textContent=
+
+  'Primatelj: '+(target==='player'?'IGRAČ':'DJELITELJ')+
+
+  ' · Karta: '+(chosenRank||'—')+chosenSuit;
+
+}
+
+function addCard(){
+
+ if(!chosenRank)return say('Prvo odaberi vrijednost karte.');
+
+ if(!active)return say('Prvo započni novu rundu.');
+
+ const c={rank:chosenRank,suit:chosenSuit};
+
+ const arr=target==='player'?player:dealer;
+
+ arr.push(c);
+
+ lastAction={target,c};
+
+ render();
+
+ chosenRank=null;
+
+ document.querySelectorAll('#ranks button').forEach(b=>b.classList.remove('selected'));
+
+ updateSelected();
+
+ if(target==='player'&&total(player)>21){
+
+  finish('lose');
+
+ }else if(doubleMode&&target==='player'){
+
+  doubleMode=false;
+
+  stand();
+
+ }else{
+
+  say('Karta '+c.rank+c.suit+' dodana: '+(target==='player'?'igrač':'djelitelj')+'.');
+
+ }
+
+}
+
+function startGame(){
+
+ if(active)return say('Prvo završi trenutnu rundu.');
+
+ const n=Number($('bet').value);
+
+ if(!Number.isFinite(n)||n<1)return say('Minimalni ulog je €1.');
+
+ if(n>balance)return say('Nema dovoljno virtualnog salda.');
+
+ bet=Math.round(n*100)/100;
+
+ balance=Math.round((balance-bet)*100)/100;
+
+ player=[];dealer=[];active=true;doubleMode=false;lastAction=null;
+
+ render();
+
+ say('Runda je počela. Unesi karte za igrača i djelitelja.');
+
+ log('Nova runda, ulog '+money(bet));
+
+}
+
+function hit(){
+
+ if(!active)return say('Započni novu rundu.');
+
+ chooseTarget('player');
+
+ say('Odaberi vrijednost karte i pritisni UNESI KARTU.');
+
+}
+
+function stand(){
+
+ if(!active)return;
+
+ const p=total(player),d=total(dealer);
+
+ if(player.length<2||dealer.length<2)
+
+  return say('Za završetak usporedbe trebaju barem dvije karte po ruci.');
+
+ if(p>21)finish('lose');
+
+ else if(d>21||p>d)finish('win');
+
+ else if(p===d)finish('push');
+
+ else finish('lose');
+
+}
+
+function doubleBet(){
+
+ if(!active||player.length!==2||balance<bet)
+
+  return say('Double je dostupan uz dvije početne karte i dovoljno salda.');
+
+ balance=Math.round((balance-bet)*100)/100;
+
+ bet=Math.round(bet*2*100)/100;
+
+ doubleMode=true;
+
+ render();
+
+ chooseTarget('player');
+
+ say('Double: odaberi jednu kartu igrača. Nakon nje runda završava.');
+
+}
+
+function splitHand(){
+
+ if(!active||player.length!==2||
+
+    value(player[0])!==value(player[1])||balance<bet)
+
+  return say('Split je dostupan samo za dvije karte iste vrijednosti i dovoljan saldo.');
+
+ say('Split još nije potpuno implementiran u ovoj verziji.');
+
+}
+
+function finish(result){
+
+ active=false;
+
+ doubleMode=false;
+
+ if(result==='win'){
+
+  const natural=isBlackjack(player)&&!isBlackjack(dealer);
+
+  const payout=natural?bet*2.5:bet*2;
+
+  balance=Math.round((balance+payout)*100)/100;
+
+  say(natural?'BLACKJACK! Isplata 3:2 — ukupno vraćeno '+money(payout)+'.':
+
+      'Pobjeda! Ukupno vraćeno '+money(payout)+'.');
+
+  log((natural?'BLACKJACK 3:2 ':'Pobjeda ')+
+
+      'neto dobitak '+money(payout-bet));
+
+ }else if(result==='push'){
+
+  balance=Math.round((balance+bet)*100)/100;
+
+  say('Izjednačenje — vraćen je cijeli ulog: '+money(bet)+'.');
+
+  log('Push — vraćen ulog '+money(bet));
+
+ }else{
+
+  say('Runda izgubljena.');
+
+  log('Poraz −'+money(bet));
+
+ }
+
+ render();
+
+}
+
+function undoCard(){
+
+ if(!lastAction)return say('Nema zadnje karte za poništiti.');
+
+ const arr=lastAction.target==='player'?player:dealer;
+
+ const i=arr.lastIndexOf(lastAction.c);
+
+ if(i>=0)arr.splice(i,1);
+
+ lastAction=null;
+
+ render();
+
+ say('Zadnja karta je poništena.');
+
+}
+
+function clearTable(){
+
+ player=[];dealer=[];active=false;doubleMode=false;bet=0;
+
+ chosenRank=null;lastAction=null;
+
+ render();updateSelected();
+
+ say('Stol očišćen.');
+
+}
+
+async function fetchPrices(){
+
+ const ids=Object.values(coins).map(c=>c.id).join(',');
+
+ try{
+
+  const res=await fetch(
+
+   'https://api.coingecko.com/api/v3/simple/price?ids='+
+
+   encodeURIComponent(ids)+'&vs_currencies=eur',
+
+   {cache:'no-store'}
+
+  );
+
+  if(!res.ok)throw new Error('API');
+
+  const data=await res.json();
+
+  for(const sym of Object.keys(coins)){
+
+   const item=data[coins[sym].id];
+
+   if(item&&Number.isFinite(item.eur))prices[sym]=item.eur;
+
+  }
+
+  priceUpdated=new Date();
+
+  showPrices();
+
+  convert('dep');convert('with');
+
+  $('priceStatus').textContent='Ažurirano: '+priceUpdated.toLocaleTimeString()+
+
+   '. Sljedeća provjera za 30 sekundi.';
+
+ }catch(e){
+
+  $('priceStatus').textContent='Cijene trenutno nisu dostupne. Pokušaj kasnije.';
+
+  showPrices();
+
+ }
+
+}
+
+function showPrices(){
+
+ $('prices').innerHTML='';
+
+ for(const sym of Object.keys(coins)){
+
+  const d=document.createElement('div');d.className='price';
+
+  const name=document.createElement('div');
+
+  name.textContent=coins[sym].name+' ('+sym+')';
+
+  const price=document.createElement('strong');
+
+  price.textContent=prices[sym]!==undefined?money(prices[sym]):'Nedostupno';
+
+  d.append(name,price);$('prices').append(d);
+
+ }
+
+}
+
+function convert(type){
+
+ const sym=$(type+'Coin').value;
+
+ const eur=Number($(type+'EUR').value);
+
+ const rate=prices[sym];
+
+ if(!Number.isFinite(eur)||rate===undefined||rate<=0){
+
+  $(type+'Result').textContent='Čekam dostupnu tržišnu cijenu.';
+
+  return;
+
+ }
+
+ $(type+'Result').textContent='1 '+sym+' = '+money(rate)+
+
+  ' | Približno: '+(eur/rate).toFixed(8)+' '+sym;
+
+}
+
+function initCoins(){
+
+ for(const sym of Object.keys(coins)){
+
+  for(const id of ['depCoin','withCoin']){
+
+   const o=document.createElement('option');
+
+   o.value=sym;o.textContent=coins[sym].name+' ('+sym+')';
+
+   $(id).append(o);
+
+  }
+
+ }
+
+}
+
+function deposit(){
+
+ const eur=Number($('depEUR').value),coin=$('depCoin').value;
+
+ if(!Number.isFinite(eur)||eur<10)return alert('Minimalna demo uplata je €10.');
+
+ if(prices[coin]===undefined)return alert('Cijena nije dostupna.');
+
+ balance=Math.round((balance+eur)*100)/100;
+
+ render();
+
+ log('DEMO DEPOSIT '+money(eur)+' ('+(eur/prices[coin]).toFixed(8)+' '+coin+')','transactions');
+
+ alert('Demo saldo uvećan za '+money(eur)+'. Nema stvarne uplate.');
+
+}
+
+function withdraw(){
+
+ const eur=Number($('withEUR').value),coin=$('withCoin').value;
+
+ const addr=$('address').value.trim();
+
+ if(!addr)return alert('Unesi demo adresu.');
+
+ if(!Number.isFinite(eur)||eur<10)return alert('Minimalna demo isplata je €10.');
+
+ if(eur>balance)return alert('Nema dovoljno virtualnog salda.');
+
+ if(prices[coin]===undefined)return alert('Cijena nije dostupna.');
+
+ balance=Math.round((balance-eur)*100)/100;
+
+ render();
+
+ const safe=addr.length>16?addr.slice(0,7)+'…'+addr.slice(-5):addr;
+
+ log('DEMO WITHDRAW '+money(eur)+' = '+
+
+  (eur/prices[coin]).toFixed(8)+' '+coin+' | '+safe,'transactions');
+
+ alert('Demo zahtjev evidentiran. Kriptovaluta nije poslana.');
+
+}
+
+['A','2','3','4','5','6','7','8','9','10','J','Q','K'].forEach(r=>{
+
+ const b=document.createElement('button');
+
+ b.textContent=r;
+
+ b.onclick=()=>chooseRank(r);
+
+ $('ranks').append(b);
+
+});
+
+initCoins();
+
+render();
+
+updateSelected();
+
+showPrices();
+
+fetchPrices();
+
+setInterval(fetchPrices,30000);
+
+</script>
+
+</body>
+
+</html>
